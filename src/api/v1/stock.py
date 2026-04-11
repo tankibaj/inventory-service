@@ -1,13 +1,12 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Header, HTTPException, status
 from fastapi.responses import Response
 
 from src.dependencies import SessionDep, TenantDep
 from src.schemas.stock import (
     DeductStockRequest,
-    ErrorResponse,
     ReserveStockRequest,
     ReserveStockResponse,
     StockConflictError,
@@ -29,7 +28,7 @@ async def get_stock_level(
     if level is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"code": "SKU_NOT_FOUND", "message": f"SKU {sku_id} not found"},
+            detail={"code": "SKU_NOT_FOUND", "message": f"SKU {sku_id!s} not found"},
         )
     return level
 
@@ -50,7 +49,10 @@ async def reserve_stock(
     service = StockService(session)
     result = await service.reserve_stock(body)
     if isinstance(result, StockConflictError):
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=result.model_dump())
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=result.model_dump(mode="json"),
+        )
     return result
 
 
@@ -68,7 +70,7 @@ async def deduct_stock(
             status_code=status.HTTP_409_CONFLICT,
             detail={
                 "code": "RESERVATION_NOT_FOUND",
-                "message": f"Reservation {body.reservation_id} not found or expired",
+                "message": f"Reservation {body.reservation_id!s} not found or expired",
             },
         )
     return Response(status_code=status.HTTP_200_OK)

@@ -2,22 +2,21 @@ import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.repositories.product_repository import ProductPage, ProductRepository
-from src.schemas.product import CreateProductRequest, ProductSchema
+from src.models.product import Product as ProductModel
+from src.models.stock import StockLevel
+from src.repositories.product_repository import ProductRepository
+from src.schemas.product import CreateProductRequest, ProductSchema, SKUSchema
 
 
 def _sku_stock_level(sku: object) -> int:
     """Extract stock_level (available) from SKU ORM object."""
-    stock = getattr(sku, "stock_level", None)
+    stock: StockLevel | None = getattr(sku, "stock_level", None)
     if stock is None:
         return 0
     return stock.available
 
 
-def product_to_schema(product: object) -> ProductSchema:
-    from src.models.product import Product as ProductModel
-
-    assert isinstance(product, ProductModel)
+def product_to_schema(product: ProductModel) -> ProductSchema:
     return ProductSchema(
         id=product.id,
         name=product.name,
@@ -25,12 +24,12 @@ def product_to_schema(product: object) -> ProductSchema:
         image_url=product.image_url,
         created_at=product.created_at,
         skus=[
-            {
-                "id": sku.id,
-                "label": sku.label,
-                "price_minor": sku.price_minor,
-                "stock_level": _sku_stock_level(sku),
-            }
+            SKUSchema(
+                id=sku.id,
+                label=sku.label,
+                price_minor=sku.price_minor,
+                stock_level=_sku_stock_level(sku),
+            )
             for sku in product.skus
             if sku.is_active
         ],
@@ -72,7 +71,7 @@ class ProductService:
         tenant_id: uuid.UUID,
         request: CreateProductRequest,
     ) -> ProductSchema:
-        skus_data: list[dict[str, object]] = [
+        skus_data: list[dict[str, str | int]] = [
             {
                 "label": sku.label,
                 "price_minor": sku.price_minor,

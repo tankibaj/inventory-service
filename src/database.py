@@ -1,13 +1,14 @@
 from collections.abc import AsyncGenerator
+from typing import Any
 
-from sqlalchemy.pool import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from src.config import get_settings
 
 _settings = get_settings()
 
-_engine_kwargs: dict = {"echo": False, "pool_pre_ping": True}
+_engine_kwargs: dict[str, Any] = {"echo": False, "pool_pre_ping": True}
 if _settings.database_use_null_pool:
     _engine_kwargs["poolclass"] = NullPool
 
@@ -20,6 +21,6 @@ async_session_factory = async_sessionmaker(
 )
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_session() -> AsyncGenerator[AsyncSession]:
     async with async_session_factory() as session:
         yield session

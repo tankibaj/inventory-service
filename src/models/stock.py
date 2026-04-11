@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from src.models.product import SKU
 
 
-class ReservationStatus(str, enum.Enum):
+class ReservationStatus(enum.StrEnum):
     active = "active"
     converted = "converted"
     expired = "expired"

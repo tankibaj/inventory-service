@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    database_url: str = "postgresql+asyncpg://inventory:inventory@localhost:5432/inventory"
+    database_url: str  # Required — set via DATABASE_URL env var or .env file
     app_env: str = "development"
     log_level: str = "INFO"
     service_name: str = "inventory-service"

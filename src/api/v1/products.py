@@ -1,7 +1,9 @@
+import logging
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 
 from src.dependencies import SessionDep, TenantDep
 from src.schemas.product import (
@@ -13,6 +15,7 @@ from src.schemas.product import (
 from src.services.product_service import ProductService
 
 router = APIRouter(prefix="/products", tags=["products"])
+logger = logging.getLogger(__name__)
 
 
 @router.get("", response_model=ProductPage)
@@ -43,7 +46,23 @@ async def create_product(
     body: CreateProductRequest,
 ) -> ProductSchema:
     service = ProductService(session)
-    return await service.create_product(tenant_id=tenant_id, request=body)
+    try:
+        return await service.create_product(tenant_id=tenant_id, request=body)
+    except IntegrityError as exc:
+        logger.warning("Product creation integrity error", extra={"error": str(exc)})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "CONFLICT",
+                "message": "Product with this name already exists for this tenant",
+            },
+        ) from exc
+    except Exception as exc:
+        logger.error("Product creation failed", extra={"error": str(exc)})
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={"code": "INVALID_INPUT", "message": "Invalid product data"},
+        ) from exc
 
 
 @router.get("/{product_id}", response_model=ProductSchema)
@@ -57,6 +76,6 @@ async def get_product(
     if product is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={"code": "PRODUCT_NOT_FOUND", "message": f"Product {product_id} not found"},
+            detail={"code": "PRODUCT_NOT_FOUND", "message": f"Product {product_id!s} not found"},
         )
     return product

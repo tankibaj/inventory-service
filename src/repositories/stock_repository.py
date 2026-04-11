@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,7 +43,7 @@ class StockRepository:
         Each line creates one StockReservation row. Deduct/release queries by order_id.
         """
         sku_ids = [sku_id for sku_id, _ in lines]
-        qty_map = {sku_id: qty for sku_id, qty in lines}
+        dict(lines)
 
         # Lock rows for update to prevent race conditions
         result = await self._session.execute(
@@ -155,7 +155,7 @@ class StockRepository:
 
     async def expire_stale_reservations(self) -> int:
         """Mark expired active reservations and release their stock. Returns count."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await self._session.execute(
             select(StockReservation)
             .where(

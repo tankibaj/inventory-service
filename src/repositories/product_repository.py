@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from src.models.product import Product, SKU
+from src.models.product import SKU, Product
 from src.models.stock import StockLevel
 
 
@@ -82,7 +82,7 @@ class ProductRepository:
         name: str,
         description: str | None,
         image_url: str | None,
-        skus_data: list[dict[str, object]],
+        skus_data: list[dict[str, str | int]],
     ) -> Product:
         product = Product(
             tenant_id=tenant_id,
@@ -94,12 +94,12 @@ class ProductRepository:
         await self._session.flush()  # Get product ID
 
         for sku_data in skus_data:
-            initial_stock = int(sku_data["initial_stock"])  # type: ignore[arg-type]
+            initial_stock = int(sku_data["initial_stock"])
             sku = SKU(
                 product_id=product.id,
                 tenant_id=tenant_id,
                 label=str(sku_data["label"]),
-                price_minor=int(sku_data["price_minor"]),  # type: ignore[arg-type]
+                price_minor=int(sku_data["price_minor"]),
             )
             self._session.add(sku)
             await self._session.flush()  # Get SKU ID

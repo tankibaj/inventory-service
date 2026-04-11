@@ -1,5 +1,5 @@
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
@@ -12,7 +12,7 @@ from src.logging_config import configure_logging
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     configure_logging()
     yield
 
@@ -31,9 +31,12 @@ def create_app() -> FastAPI:
 
     # X-Request-ID middleware
     @app.middleware("http")
-    async def request_id_middleware(request: Request, call_next: object) -> Response:
+    async def request_id_middleware(
+        request: Request,
+        call_next: Callable[[Request], Awaitable[Response]],
+    ) -> Response:
         request_id = request.headers.get("x-request-id", str(uuid.uuid4()))
-        response: Response = await call_next(request)  # type: ignore[call-arg]
+        response = await call_next(request)
         response.headers["x-request-id"] = request_id
         return response
 

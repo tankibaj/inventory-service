@@ -1,23 +1,22 @@
-import asyncio
 import logging
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config import get_settings
 from src.repositories.stock_repository import (
-    ReservationResult,
-    StockConflict,
     StockRepository,
 )
 from src.schemas.stock import (
     DeductStockRequest,
     ReserveStockRequest,
     ReserveStockResponse,
-    StockConflict as StockConflictSchema,
     StockConflictError,
     StockLevelSchema,
+)
+from src.schemas.stock import (
+    StockConflict as StockConflictSchema,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ class StockService:
         self,
         request: ReserveStockRequest,
     ) -> ReserveStockResponse | StockConflictError:
-        expires_at = datetime.now(timezone.utc) + timedelta(
+        expires_at = datetime.now(UTC) + timedelta(
             minutes=self._settings.reservation_ttl_minutes
         )
         lines = [(line.sku_id, line.quantity) for line in request.lines]
