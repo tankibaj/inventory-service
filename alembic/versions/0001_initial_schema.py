@@ -19,16 +19,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enum type
-    stock_reservation_status = postgresql.ENUM(
-        "active",
-        "converted",
-        "expired",
-        "released",
-        name="stock_reservation_status",
-    )
-    stock_reservation_status.create(op.get_bind())
-
     # products table
     op.create_table(
         "products",
@@ -127,7 +117,6 @@ def upgrade() -> None:
                 "expired",
                 "released",
                 name="stock_reservation_status",
-                create_type=False,
             ),
             nullable=False,
             server_default="active",
@@ -150,8 +139,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     op.drop_table("stock_reservations")
+    op.execute("DROP TYPE IF EXISTS stock_reservation_status")
     op.drop_table("stock_levels")
     op.drop_table("skus")
     op.drop_table("products")
-
-    op.execute("DROP TYPE IF EXISTS stock_reservation_status")

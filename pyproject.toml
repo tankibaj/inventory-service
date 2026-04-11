@@ -25,6 +25,7 @@ dev = [
     "mypy>=1.13.0",
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-env>=1.1.0",
     "schemathesis>=3.39.0",
 ]
 
@@ -34,6 +35,7 @@ dev = [
     "mypy>=1.13.0",
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
+    "pytest-env>=1.1.0",
     "schemathesis>=3.39.0",
     "anyio>=4.0.0",
 ]
@@ -54,7 +56,12 @@ plugins = ["pydantic.mypy"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
 testpaths = ["tests"]
+env = [
+    "DATABASE_USE_NULL_POOL=true",
+    "DATABASE_URL=postgresql+asyncpg://inventory:inventory@localhost:5432/inventory",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

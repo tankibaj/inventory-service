@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     service_name: str = "inventory-service"
     service_version: str = "0.1.0"
     reservation_ttl_minutes: int = 15
+    # When true, NullPool is used (no connection pooling) — for tests and CI
+    database_use_null_pool: bool = False
 
 
 def get_settings() -> Settings:
