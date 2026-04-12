@@ -3,6 +3,7 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
+from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 from src.api.health import router as health_router
@@ -24,6 +25,15 @@ def create_app() -> FastAPI:
         title="Inventory Service",
         version=settings.service_version,
         lifespan=lifespan,
+    )
+
+    # CORS — allow browser clients (storefront, admin) in development
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
     # Prometheus metrics
