@@ -1,6 +1,6 @@
 # Entity Schema: inventory-service
 
-> Auto-generated from SQLAlchemy models on 2026-04-25 23:13 UTC. Do not edit manually.
+> Auto-generated from SQLAlchemy models on 2026-04-26 00:20 UTC. Do not edit manually.
 
 ---
 
